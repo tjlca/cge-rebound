@@ -1,10 +1,7 @@
-*Rebound effect being shows. 
-*Only value chain scale rebound considered in this file. 
-*Total rebound in another file. 
-
-*THeVC emission were changed to get good rebound effects. 
-
-
+*rebound effect is showin using this file. 
+*Rebound effect for total emission shown over here. 
+*Rebound effect is much higher 
+*VC scale emission were changed to get nice effect.
 
 
 option limrow = 0;
@@ -38,9 +35,9 @@ Display UU.L, Y.L, F.L, Z.L, D.L, AQ.L,Xp.L,IM.L,Xv.L,pf.L, pz.L,Xg.L,E.L,
 
 
 ************Store the current Value chain emission*****************************************
-Parameter vc_emission0;
-vc_emission0 = Value_Chain_emission.L;
-
+Parameter vc_emission0,expected_red;
+vc_emission0 = Ez4.L;
+expected_red = Value_chain_emission.L*0.5/Ez4.L*100;
 
 ********************SHOCK***********************************************
 *******************Introduction of New technology**********************
@@ -54,13 +51,13 @@ Solve CGEP2P maximizing utility using NLP;
 Parameter reduction;
 Parameter rebound;
 
-reduction = 100 *  (-Value_chain_emission.L + vc_emission0)/vc_emission0;
+reduction = 100 *  (vc_emission0-Ez4.L)/vc_emission0;
 
-rebound =100-( (power(reduction,2)**0.5)/50*100);
-
-
+rebound =100-((power(reduction,2)**0.5)/Expected_red*100);
 Parameter Slope;
 Slope = rebound/myparam;
+
+
 
 Display ANSWER;
 Display ANSWER;
@@ -87,7 +84,7 @@ put demand_to_PR1.L            ;
 put demand_to_PR2.L            ;
 put rebound                    ;
 put reduction                  ;
-put Slope                      ;
+put slope                      ;
 putclose;
 
 

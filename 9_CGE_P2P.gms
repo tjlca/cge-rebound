@@ -1,5 +1,8 @@
-*We are changing the import emissions to show the effect  of trade. ALong with that we are also changing the cobination function of the products from the economy to make the prices at the value chain scale. basically we are making the emergent flow costlier than the conventional flow to get a nice pareto.
+*We are changing the import emissions to show the effect  of trade. ALong with that we are also changing the cobination function of the products from the economy to make the prices at the value chain scale. 
 *Had to change a constrain to =G= for code to run properly. 
+*Conventional flow is environmentall worse as well as costlier. Customers have a fixed budget. 
+*They  maximize their utility. 
+
 
 $inlinecom /* */
 $offlisting
@@ -471,7 +474,7 @@ pq0('PR2') = 1;
 
 Equation Link1, Link2;
 Link1.. p_F1_1 =E= (pq('PR1') * 1.1) * p0R1/pq0('PR1') + pq('PR2') * 0.6 * p0R2/pq0('PR2');
-Link2.. p_F1_2 =E= pq('PR1') * 1.4 * p0R1/pq0('PR1') + (pq('PR2') ** 0.7) * p0R2/pq0('PR2');
+Link2.. p_F1_2 =E= pq('PR1') * 0.8 * p0R1/pq0('PR1') + (pq('PR2') * 0.6) * p0R2/pq0('PR2');
 
 
 
@@ -558,7 +561,7 @@ derived_IF_PR2 = 72*1*2/(72*1)*p0R2;
 
 
 impact1.. env_l =E=  Z('PR1') * pq0('PR1')/p0R1 * derived_IF_PR1      +     Z('PR2') * derived_IF_PR2 * pq0('PR2')/p0R2     -      env0_l ;
-impact2.. env_g =E= Z('PR1') * derived_IF_PR1 * pq0('PR1')/p0R1      +     Z('PR2') * derived_IF_PR2 * pq0('PR2')/p0R2    -      env0_g  + IM('PR1') * pq0('PR1')/p0R1 * 1  +  IM('PR2') * pq0('PR2')/p0R2 * 0.3 ;
+impact2.. env_g =E= Z('PR1') * derived_IF_PR1 * pq0('PR1')/p0R1      +     Z('PR2') * derived_IF_PR2 * pq0('PR2')/p0R2    -      env0_g  + IM('PR1') * pq0('PR1')/p0R1 * 3.7  +  IM('PR2') * pq0('PR2')/p0R2 * 4.9 ;
 
 
 
@@ -696,9 +699,10 @@ VCmakeT(n,m) = VCmake(m,n);
 VCtech(n,m) = VCmakeT(n,m) - VCuse(n,m);
 
 VCint(q,m) = Level3(q,m);
+VCint('1','1') = 30;
+VCint('1','2') = 15;
 
-
-
+*Value chain Scale emission were increased to have good rebound effect numbers
 
 *******************************************************************************
 
@@ -850,8 +854,8 @@ Equation Link3,Link4;
 *Link3.. Xp('PR1')  =e= 1.5 * p2ps('1')  + 1.3 * p2ps('2') + Xp0('PR1');
 *Link4.. Xp('PR2')  =e= 2 * p2ps('1') + 1.8 * p2ps('2') + Xp0('PR2');
 
-Link3.. Xp('PR1')  =G= (1.5 * p2ps('1') * p0R1/pq0('PR1')  + 1.3 * p2ps('2') * p0R1/pq0('PR1')) + Xp0('PR1');
-Link4.. Xp('PR2')  =G= (2.0 * p2ps('1') * p0R2/pq0('PR2')  + 1.8 * p2ps('2') * p0R2/pq0('PR2')) + Xp0('PR2');
+Link3.. Xp('PR1')  =E= (1.5 * p2ps('1') * p0R1/pq0('PR1')  + 1.5 * p2ps('2') * p0R1/pq0('PR1')) + Xp0('PR1');
+Link4.. Xp('PR2')  =E= (2.0 * p2ps('1') * p0R2/pq0('PR2')  + 2.0 * p2ps('2') * p0R2/pq0('PR2')) + Xp0('PR2');
 
 
 
@@ -875,6 +879,31 @@ final_demand2.. demand_to_PR2 =E= (Xp('PR2') - Xp0('PR2'))*pq0('PR2')/p0R2;
 *We are fixing the pOUT value. This is becasue the engineering scale or equipment scale is a plant that does not change its output. If its output changes, the model will take advantages of the non linear effects in its equations and the scaling variables to reduce its emissions that should not be allowed. THe plant s working parameters (flow rates) should be fixed.
 
 
+**********************************Equation of equipment scale prices****************************
+
+************************************************************************************************
+
+Positive Variable pEQ;
+*pEQ.UP = 3;
+pEQ.LO = 0.01;
+
+
+Parameter Subsidy;
+Subsidy=0.0;
+
+Equation EQ_SCALE_PRICE;
+
+EQ_SCALE_PRICE.. pEQ =E= p_F1_1*p2ps('1')*0.1 + p_F1_2*p2ps('2')*0.1 - p2ps('2')*Subsidy;
+
+**********************************Customer has fized budget**********************************
+Parameter myparam;
+myparam=%mybudget%;
+Equation Budget;
+Budget.. (pEQ**0.8)*(p2ps('6')) =L= myparam;
+
+
+********************************************************************************************
+
 
 pOUT.FX = 1;
 
@@ -885,6 +914,12 @@ pOUT.FX = 1;
 *******************************************************************************
 
 ************************* 4. Optimization Formulation *************************
+Equation obj1;
+
+Variable utility;
+
+obj1.. utility =E= p2pf('5')**1.9;
+*obj1.. Utility =E= 5;
 
 *******************************************************************************
 
@@ -900,12 +935,12 @@ Option NLP = %mydata%;
 
 Set ANSWER /OUTPUT_OF_GAMS_CODE/;
 
-
 *******************************Writing Header in Output File*******************************************************
 
 file fx /%myfile%/;
 
 
+$ontext
 
 fx.ps = 200;
 fx.pw = 30000;
@@ -928,10 +963,11 @@ put 'Price_Conv'                  ;
 put 'Price_em'                    ;
 put 'DEM1'                        ;
 put 'DEM2'                        ;
+put 'rebound'                     ;
+put 'reduction'                   ;
 putclose;
 
 
-
-
+$offtext
 
 
